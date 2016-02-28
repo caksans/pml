@@ -112,9 +112,10 @@ $(document).ready(function () {
 </div>
 
 
+<p>github repo: <a href="https://github.com/caksans/pml.git" class="uri">https://github.com/caksans/pml.git</a></p>
 <p>Using devices such as Jawbone Up, Nike FuelBand, and Fitbit it is now possible to collect a large amount of data about personal activity relatively inexpensively. These type of devices are part of the quantified self movement - a group of enthusiasts who take measurements about themselves regularly to improve their health, to find patterns in their behavior, or because they are tech geeks. One thing that people regularly do is quantify how much of a particular activity they do, but they rarely quantify how well they do it. In this project, your goal will be to use data from accelerometers on the belt, forearm, arm, and dumbell of 6 participants. They were asked to perform barbell lifts correctly and incorrectly in 5 different ways. More information and the data for this project are available from the website here: <a href="http://groupware.les.inf.puc-rio.br/har" class="uri">http://groupware.les.inf.puc-rio.br/har</a></p>
-<div id="loading-the-data-setup-and-housekeeping" class="section level3">
-<h3>Loading the Data, Setup, and Housekeeping</h3>
+<div id="loading-the-data-setup-and-housekeeping" class="section level1">
+<h1>Loading the Data, Setup, and Housekeeping</h1>
 <pre class="r"><code>rawTrainData &lt;- read.csv(file = &quot;pml-training.csv&quot;, 
                          na.strings = c(&quot;#DIV/0!&quot;), header = TRUE, sep = &quot;,&quot;)
 dim(rawTrainData)</code></pre>
@@ -157,8 +158,8 @@ trainSet &lt;- trainSet[, -zeroVarCol]
 dim(trainSet)</code></pre>
 <pre><code>## [1] 13737    53</code></pre>
 </div>
-<div id="random-forest-model" class="section level3">
-<h3>Random Forest Model</h3>
+<div id="random-forest-model" class="section level1">
+<h1>Random Forest Model</h1>
 <p>We now run randomForest() on the training set:</p>
 <pre class="r"><code>randFor &lt;- randomForest(classe ~ ., data = trainSet, ntrees = 12)</code></pre>
 <p>and build a confusion matrix of the training set.</p>
@@ -231,10 +232,14 @@ confusionMatrix(evalValidate, validateSet$classe)</code></pre>
 ## Detection Rate         0.2843   0.1932   0.1732   0.1626   0.1832
 ## Detection Prevalence   0.2845   0.1944   0.1752   0.1628   0.1832
 ## Balanced Accuracy      0.9996   0.9984   0.9954   0.9963   0.9982</code></pre>
-<p>We see that the model fits the validation set as well, with an accuracy and confidence interval of &gt; 0.99. We are ready to test this model on the test set.</p>
+<p>We see that the model fits the validation set as well, with an accuracy and confidence interval of &gt; 0.99.</p>
+<div id="the-out-of-sample-error-using-cross-validation-is-1." class="section level3">
+<h3>The out of sample error (using cross-validation) is &lt; 1%.</h3>
+<p>We are ready to test this model on the test set.</p>
 </div>
-<div id="test-set" class="section level3">
-<h3>Test Set</h3>
+</div>
+<div id="test-set" class="section level1">
+<h1>Test Set</h1>
 <p>We now run the model against the test set:</p>
 <pre class="r"><code>rawTestData &lt;- read.csv(file = &quot;pml-testing.csv&quot;, 
                          na.strings = c(&quot;#DIV/0!&quot;), header = TRUE, sep = &quot;,&quot;)
