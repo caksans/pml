@@ -1,0 +1,95 @@
+---
+title: 'Practical Machine Learning: Fitness Devices'
+output: html_document
+---
+
+Using devices such as Jawbone Up, Nike FuelBand, and Fitbit it is now possible to collect a large amount of data about personal activity relatively inexpensively. These type of devices are part of the quantified self movement - a group of enthusiasts who take measurements about themselves regularly to improve their health, to find patterns in their behavior, or because they are tech geeks. One thing that people regularly do is quantify how much of a particular activity they do, but they rarely quantify how well they do it. In this project, your goal will be to use data from accelerometers on the belt, forearm, arm, and dumbell of 6 participants. They were asked to perform barbell lifts correctly and incorrectly in 5 different ways. More information and the data for this project are available from the website here: http://groupware.les.inf.puc-rio.br/har
+
+### Loading the Data, Setup, and Housekeeping
+
+```{r}
+rawTrainData <- read.csv(file = "pml-training.csv", 
+                         na.strings = c("#DIV/0!"), header = TRUE, sep = ",")
+dim(rawTrainData)
+
+```
+
+We load the necessary libraries and partition the data, using 70% as training data and 30% for validation of the model:
+
+```{r, results = "hide"}
+library(caret)
+library(randomForest)
+library(e1071)
+set.seed(38)
+
+partitionTrainSet <- createDataPartition(rawTrainData$classe, p = 0.7, list = FALSE)
+
+trainSet <- rawTrainData[partitionTrainSet,]
+validateSet <- rawTrainData[-partitionTrainSet, ]
+
+```
+
+In order to run our machine learning model, we will need to clean the data.  We begin by removing the NA data and any data that are blank.  We then remove any data points that are less than 70% complete since we would like to avoid basing our model off of spurious data points.  We then remove common named data and finish by removing any data that does not appear to have any variance since zero-variance data will not be impactful.
+
+It is also worth noting that we will need dim(set) < 54 in order for the random forest model to function in R.
+
+```{r}
+remBlank <- sapply(trainSet, function(x) {
+    sum(!(x == "" | is.na(x)))
+})
+
+blankCol <- names(remBlank[remBlank < 0.7 * length(trainSet$classe)])
+
+nameCol <- c("X", "user_name", "raw_timestamp_part_1", "raw_timestamp_part_2", "cvtd_timestamp", "new_window", "num_window")
+
+remCol <- c(nameCol, blankCol)
+trainSet <- trainSet[, !names(trainSet) %in% remCol]
+
+zeroVarCol <- nearZeroVar(trainSet)
+trainSet <- trainSet[, -zeroVarCol]
+
+dim(trainSet)
+```
+
+### Random Forest Model
+
+We now run randomForest() on the training set:
+
+```{r}
+randFor <- randomForest(classe ~ ., data = trainSet, ntrees = 12)
+```
+
+and build a confusion matrix of the training set.
+
+```{r}
+evalTrain <- predict(randFor, trainSet)
+
+confusionMatrix(evalTrain, trainSet$classe)
+
+```
+
+As expected, we see that the model fits the training data quite well.  We now run the model against the validation data set to see if the model fits and avoids some of the common pitfalls, such as over-fitting.
+
+```{r}
+evalValidate <- predict(randFor, validateSet)
+
+confusionMatrix(evalValidate, validateSet$classe)
+
+```
+
+We see that the model fits the validation set as well, with an accuracy and confidence interval of > 0.99.  We are ready to test this model on the test set.
+
+
+### Test Set
+
+We now run the model against the test set:
+
+```{r}
+rawTestData <- read.csv(file = "pml-testing.csv", 
+                         na.strings = c("#DIV/0!"), header = TRUE, sep = ",")
+
+evalTest <- predict(randFor, rawTestData)
+
+evalTest
+
+```
